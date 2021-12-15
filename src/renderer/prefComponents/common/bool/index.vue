@@ -18,7 +18,7 @@
     <el-switch
       v-model="status"
       @change="handleSwitchChange"
-      :active-text="status ? 'On': 'Off'">
+      :active-text="activeText">
     </el-switch>
   </section>
 </template>
@@ -41,6 +41,11 @@ export default {
     disable: {
       type: Boolean,
       default: false
+    }
+  },
+  computed: {
+    activeText () {
+      return this.status ? this.$t('others.on') : this.$t('others.off')
     }
   },
   watch: {
