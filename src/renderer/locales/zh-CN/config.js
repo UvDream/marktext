@@ -18,6 +18,27 @@ export default {
       defaultDirectoryToOpen: '默认打开目录'
     },
     editor: '编辑器',
+    editorChild: {
+      fontSizeInTextEditor: '文本编辑器字体大小',
+      lineHeightInTextEditor: '文本编辑器行高',
+      fontForTextEditor: '文本编辑器字体',
+      fontSizeInCodeBlocks: '代码块字体大小',
+      fontForCodeBlocks: '代码块字体',
+      showLineNumbersInCodeBlocks: '代码块显示行号',
+      removeLeadingAndTrailingEmptyLinesInCodeBlocks: '代码块删除首尾空行',
+      automaticallyCloseBracketsWhenWriting: '当写入时自动关闭括号',
+      automaticallyCompleteMarkdownSyntax: '自动完成 Markdown 语法',
+      automaticallyCloseQuotationMarks: '自动关闭引号',
+      lineSeparatorType: '行分隔符类型',
+      defaultEncoding: '默认编码',
+      automaticallyDetectFileEncoding: '自动检测文件编码',
+      handlingOfTrailingNewlineCharacters: '处理尾部换行符',
+      textDirection: '文本方向',
+      hideHintForSelectingTypeOfNewParagraph: '选择新段落类型时隐藏提示',
+      hidePopupWhenCursorIsOverLink: '光标移动到链接上时隐藏弹出窗口',
+      whetherToAutomaticallyCheckAnyRelatedTasks: '是否自动检查任何相关任务'
+
+    },
     markdown: 'Markdown',
     spelling: '拼写检查',
     theme: '主题',

@@ -1,7 +1,7 @@
 <template>
   <section class="pref-font-input-item" :class="{'ag-underdevelop': disable}">
     <div class="description">
-      <span>{{description}}</span>
+      <span>{{$t(description)}}</span>
       <i class="el-icon-info" v-if="more" @click="handleMoreClick"></i>
     </div>
     <el-autocomplete
