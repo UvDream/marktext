@@ -20,4 +20,8 @@ export const fileSortByOptions = [{
 export const languageOptions = [{
   label: 'English',
   value: 'en'
+},
+{
+  label: '简体中文',
+  value: 'zh-CN'
 }]

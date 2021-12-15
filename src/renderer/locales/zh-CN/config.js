@@ -10,7 +10,12 @@ export default {
       hideScrollbars: '隐藏滚动条',
       wrapTextInTableContents: '在目录中换行',
       sortFieldForFilesInOpenFolders: '打开文件夹中文件的排序字段',
-      languageForUserInterface: '用户界面语言'
+      languageForUserInterface: '用户界面语言',
+      actionOnStartup: '启动时的操作',
+      openTheDefaultDirectory: '打开默认目录',
+      selectFolder: '选择文件夹',
+      openABlankPage: '打开空白页',
+      defaultDirectoryToOpen: '默认打开目录'
     },
     editor: '编辑器',
     markdown: 'Markdown',

@@ -57,15 +57,15 @@
       :disable="true"
     ></cur-select>
     <section class="startup-action-ctrl">
-      <div>Action on startup</div>
-      <el-radio-group v-model="startUpAction">
+      <div>{{$t('category.generalChild.actionOnStartup')}}</div>
+       <el-radio-group v-model="startUpAction">
         <!--
           Hide "lastState" for now (#2064).
         <el-radio class="ag-underdevelop" label="lastState">Open the last window state</el-radio>
         -->
-        <el-radio label="folder">Open the default directory<span>: {{defaultDirectoryToOpen}}</span></el-radio>
-        <el-button size="small" @click="selectDefaultDirectoryToOpen">Select Folder</el-button>
-        <el-radio label="blank">Open a blank page</el-radio>
+        <el-radio label="folder">{{$t('category.generalChild.openTheDefaultDirectory')}}<span>: {{defaultDirectoryToOpen}}</span></el-radio>
+        <el-button size="small" @click="selectDefaultDirectoryToOpen">{{$t('category.generalChild.selectFolder')}}</el-button>
+        <el-radio label="blank">{{$t('category.generalChild.openABlankPage')}}</el-radio>
       </el-radio-group>
     </section>
     <cur-select
