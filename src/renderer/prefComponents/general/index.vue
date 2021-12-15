@@ -1,13 +1,13 @@
 <template>
   <div class="pref-general">
-    <h4>General</h4>
+    <h4>{{$t('category.general')}}</h4>
     <bool
-      description="Automatically save document changes"
+      description="category.generalChild.desc"
       :bool="autoSave"
       :onChange="value => onSelectChange('autoSave', value)"
     ></bool>
     <range
-      description="Delay following document edit before automatically saving (milliseconds)"
+      description="category.generalChild.delayTime"
       :value="autoSaveDelay"
       :min="1000"
       :max="10000"
@@ -24,22 +24,22 @@
     ></cur-select>
     <separator></separator>
     <bool
-      description="Open files in new window"
+      description="category.generalChild.openFileInNewWindow"
       :bool="openFilesInNewWindow"
       :onChange="value => onSelectChange('openFilesInNewWindow', value)"
     ></bool>
     <bool
-      description="Open folders in new window"
+      description="category.generalChild.OpenFoldersInNewWindow"
       :bool="openFolderInNewWindow"
       :onChange="value => onSelectChange('openFolderInNewWindow', value)"
     ></bool>
     <bool
-      description="Hide scrollbars"
+      description="category.generalChild.hideScrollbars"
       :bool="hideScrollbar"
       :onChange="value => onSelectChange('hideScrollbar', value)"
     ></bool>
     <bool
-      description="Wrap text in table of contents"
+      description="category.generalChild.wrapTextInTableContents"
       :bool="wordWrapInToc"
       :onChange="value => onSelectChange('wordWrapInToc', value)"
     ></bool>
@@ -50,7 +50,7 @@
     ></bool>
     <separator></separator>
     <cur-select
-      description="Sort field for files in open folders"
+      description="category.generalChild.sortFieldForFilesInOpenFolders"
       :value="fileSortBy"
       :options="fileSortByOptions"
       :onChange="value => onSelectChange('fileSortBy', value)"
@@ -69,11 +69,10 @@
       </el-radio-group>
     </section>
     <cur-select
-      description="Language for user interface"
+      description="category.generalChild.languageForUserInterface"
       :value="language"
       :options="languageOptions"
       :onChange="value => onSelectChange('language', value)"
-      :disable="true"
     ></cur-select>
   </div>
 </template>

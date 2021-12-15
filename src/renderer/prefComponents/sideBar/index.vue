@@ -1,6 +1,6 @@
 <template>
   <div class="pref-sidebar">
-    <h3 class="title">Preferences</h3>
+    <h3 class="title">{{$t('category.preferences')}}</h3>
     <section class="search-wrapper">
       <el-autocomplete
         popper-class="pref-autocomplete"
@@ -28,7 +28,7 @@
         <svg :viewBox="c.icon.viewBox">
           <use :xlink:href="c.icon.url"></use>
         </svg>
-        <span>{{c.name}}</span>
+        <span>{{$t(c.name)}}</span>
       </div>
     </section>
   </div>

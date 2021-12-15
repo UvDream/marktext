@@ -37,10 +37,10 @@ import {
 import services from './services'
 import routes from './router'
 import { addElementStyle } from '@/util/theme'
-
+import VueI18n from 'vue-i18n'
+import locales from './locales/index'
 import './assets/styles/index.css'
 import './assets/styles/printService.css'
-
 // -----------------------------------------------
 
 // Decode source map in production - must be registered first
@@ -87,6 +87,7 @@ Vue.use(TabPane)
 Vue.use(Input)
 
 Vue.use(VueRouter)
+Vue.use(VueI18n)
 
 Vue.use(VueElectron)
 Vue.http = Vue.prototype.$http = axios
@@ -99,10 +100,16 @@ services.forEach(s => {
 const router = new VueRouter({
   routes: routes(global.marktext.env.type)
 })
-
+const i18n = new VueI18n(
+  {
+    locale: 'zh',
+    messages: locales
+  }
+)
 /* eslint-disable no-new */
 new Vue({
   store,
   router,
+  i18n,
   template: '<router-view class="view"></router-view>'
 }).$mount('#app')
