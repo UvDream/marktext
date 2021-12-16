@@ -116,7 +116,7 @@
     ></bool>
     <separator></separator>
     <text-box
-      description="category.editorChild.Maximum width of text editor. Empty for theme default, otherwise number with unit suffix (`ch`: characters, `px`: pixels, `%`: percentage)"
+      description="category.editorChild.others"
       :input="editorLineWidth"
       :regexValidator="/^(?:$|[0-9]+(?:ch|px|%)$)/"
       defaultValue="Default value from current theme"

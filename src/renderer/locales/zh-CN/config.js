@@ -36,8 +36,8 @@ export default {
       textDirection: '文本方向',
       hideHintForSelectingTypeOfNewParagraph: '选择新段落类型时隐藏提示',
       hidePopupWhenCursorIsOverLink: '光标移动到链接上时隐藏弹出窗口',
-      whetherToAutomaticallyCheckAnyRelatedTasks: '是否自动检查任何相关任务'
-
+      whetherToAutomaticallyCheckAnyRelatedTasks: '是否自动检查任何相关任务',
+      others: '文本编辑器的最大宽度。 主题默认为空，否则为带有单位后缀的数字（`ch`：字符，`px`：像素，`%`：百分比）'
     },
     markdown: 'Markdown',
     spelling: '拼写检查',
