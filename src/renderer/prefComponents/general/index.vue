@@ -129,9 +129,13 @@ export default {
       }
     }
   },
+  mounted () {
+    this.$root.$i18n.locale = this.language
+  },
   methods: {
     onSelectChange (type, value) {
       this.$store.dispatch('SET_SINGLE_PREFERENCE', { type, value })
+      this.$root.$i18n.locale = value
     },
     selectDefaultDirectoryToOpen () {
       this.$store.dispatch('SELECT_DEFAULT_DIRECTORY_TO_OPEN')

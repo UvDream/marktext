@@ -1,81 +1,81 @@
 <template>
   <div class="pref-markdown">
-    <h4>markdown</h4>
+    <h4>{{$t('category.markdown')}}</h4>
     <bool
-      description="Prefer loose list items"
+      description="category.markdownChild.preferLooseListItems"
       :bool="preferLooseListItem"
       :onChange="value => onSelectChange('preferLooseListItem', value)"
       more="https://spec.commonmark.org/0.29/#loose"
     ></bool>
     <cus-select
-      description="Preferred marker for bullet lists"
+      description="category.markdownChild.preferredMarkerForBulletLists"
       :value="bulletListMarker"
       :options="bulletListMarkerOptions"
       :onChange="value => onSelectChange('bulletListMarker', value)"
       more="https://spec.commonmark.org/0.29/#bullet-list-marker"
     ></cus-select>
     <cus-select
-      description="Preferred marker for ordered lists"
+      description="category.markdownChild.preferredMarkerForOrderedLists"
       :value="orderListDelimiter"
       :options="orderListDelimiterOptions"
       :onChange="value => onSelectChange('orderListDelimiter', value)"
       more="https://spec.commonmark.org/0.29/#ordered-list"
     ></cus-select>
     <cus-select
-      description="Preferred heading style"
+      description="category.markdownChild.preferredHeadingStyle"
       :value="preferHeadingStyle"
       :options="preferHeadingStyleOptions"
       :onChange="value => onSelectChange('preferHeadingStyle', value)"
       :disable="true"
     ></cus-select>
     <cus-select
-      description="Preferred tab width"
+      description="category.markdownChild.preferredTabWidth"
       :value="tabSize"
       :options="tabSizeOptions"
       :onChange="value => onSelectChange('tabSize', value)"
     ></cus-select>
     <cus-select
-      description="Preferred list indentation"
+      description="category.markdownChild.preferredListIndentation"
       :value="listIndentation"
       :options="listIndentationOptions"
       :onChange="value => onSelectChange('listIndentation', value)"
     ></cus-select>
     <separator></separator>
-    <h5>Markdown extensions</h5>
+    <h5>{{$t('category.markdownChild.markdownExtensions')}}</h5>
     <cus-select
-      description="Format for front matter"
+      description="category.markdownChild.formatForFrontMatter"
       :value="frontmatterType"
       :options="frontmatterTypeOptions"
       :onChange="value => onSelectChange('frontmatterType', value)"
     ></cus-select>
     <bool
-      description="Use Pandoc-style superscript and subscript"
+      description="category.markdownChild.usePandocStyleSuperscriptAndSubscript"
       :bool="superSubScript"
       :onChange="value => onSelectChange('superSubScript', value)"
       more="https://pandoc.org/MANUAL.html#superscripts-and-subscripts"
     ></bool>
     <bool
-      description="Use Pandoc-style footnotes (requires restart)"
+      description="category.markdownChild.usePandocStyleFootnotesRequiresRestart"
       :bool="footnote"
       :onChange="value => onSelectChange('footnote', value)"
       more="https://pandoc.org/MANUAL.html#footnotes"
     ></bool>
     <separator></separator>
-    <h5>Compatibility</h5>
+    <h5>{{$t('category.markdownChild.compatibility')}}</h5>
     <bool
-      description="Enable HTML rendering"
+      description="category.markdownChild.enableHtmlRendering"
       :bool="isHtmlEnabled"
       :onChange="value => onSelectChange('isHtmlEnabled', value)"
     ></bool>
     <bool
-      description="Enable GitLab compatibility mode"
+      description="category.markdownChild.enableGitLabCompatibilityMode"
       :bool="isGitlabCompatibilityEnabled"
       :onChange="value => onSelectChange('isGitlabCompatibilityEnabled', value)"
     ></bool>
     <separator></separator>
-    <h5>Diagram theme</h5>
+    <h5>{{$t('category.markdownChild.diagramTheme')}}</h5>
     <cus-select
-      description="Sequence diagram theme"
+      description="category.markdownChild.sequenceDiagramTheme"
       :value="sequenceTheme"
       :options="sequenceThemeOptions"
       :onChange="value => onSelectChange('sequenceTheme', value)"

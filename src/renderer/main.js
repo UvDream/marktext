@@ -100,10 +100,9 @@ services.forEach(s => {
 const router = new VueRouter({
   routes: routes(global.marktext.env.type)
 })
-console.log(locales)
 const i18n = new VueI18n(
   {
-    locale: 'zh-CN',
+    locale: 'en-US',
     messages: locales
   }
 )

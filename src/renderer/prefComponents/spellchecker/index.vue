@@ -1,34 +1,34 @@
 <template>
   <div class="pref-spellchecker">
-    <h4>Spelling</h4>
+    <h4>{{$t('category.spelling')}}</h4>
     <bool
-      description="Enable spell checker (experimental)"
+      description="category.spellingChild.enableSpellChecker"
       :bool="spellcheckerEnabled"
       :onChange="handleSpellcheckerEnabled"
     ></bool>
     <separator></separator>
     <bool
-      description="Use Hunspell instead of system spell checker on macOS and Windows 10 (requires restart)"
+      description="category.spellingChild.useHunspellInsteadOfSystemSpellChecker"
       :bool="spellcheckerIsHunspell"
       :disable="!isOsSpellcheckerSupported || !spellcheckerEnabled"
       :onChange="value => onSelectChange('spellcheckerIsHunspell', value)"
     ></bool>
     <bool
-      description="Hide marks for spelling errors"
+      description="category.spellingChild.hideMarksForSpellingErrors"
       :bool="spellcheckerNoUnderline"
       :disable="!spellcheckerEnabled"
       :onChange="value => onSelectChange('spellcheckerNoUnderline', value)"
     ></bool>
     <bool
       v-show="isOsx && !spellcheckerIsHunspell"
-      description="Automatically detect document language (requires showing marks for spelling errors)"
+      description="category.spellingChild.automaticallyDetectDocumentLanguage"
       :bool="spellcheckerAutoDetectLanguage"
       :disable="!spellcheckerEnabled"
       :onChange="value => onSelectChange('spellcheckerAutoDetectLanguage', value)"
     ></bool>
     <separator></separator>
     <cur-select
-      description="Default language for spell checker"
+      description="category.spellingChild.defaultLanguageForSpellChecker"
       :value="spellcheckerLanguage"
       :options="availableDictionaries"
       :disable="!spellcheckerEnabled"

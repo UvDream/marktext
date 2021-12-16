@@ -112,6 +112,9 @@ const mutations = {
   },
   TOGGLE_VIEW_MODE (state, entryName) {
     state[entryName] = !state[entryName]
+  },
+  SET_LANGUAGE (state, { type, language }) {
+    state[type] = language
   }
 }
 
@@ -125,7 +128,8 @@ const actions = {
     })
   },
 
-  SET_SINGLE_PREFERENCE ({ commit }, { type, value }) {
+  SET_SINGLE_PREFERENCE ({ commit, state }, { type, value }) {
+    commit('SET_LANGUAGE', { type, value })
     // save to electron-store
     ipcRenderer.send('mt::set-user-preference', { [type]: value })
   },
