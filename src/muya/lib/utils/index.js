@@ -1,8 +1,6 @@
 import runSanitize from './dompurify'
 import { URL_REG, DATA_URL_REG, IMAGE_EXT_REG } from '../config'
-
-const ID_PREFIX = 'ag-'
-let id = 0
+export { getUniqueId, getLongUniqueId } from './random'
 
 const TIMEOUT = 1500
 
@@ -13,10 +11,6 @@ const HTML_TAG_REPLACEMENTS = {
   '"': '&quot;',
   "'": '&#39;'
 }
-
-export const getUniqueId = () => `${ID_PREFIX}${id++}`
-
-export const getLongUniqueId = () => `${getUniqueId()}-${(+new Date()).toString(32)}`
 
 export const isMetaKey = ({ key }) => key === 'Shift' || key === 'Control' || key === 'Alt' || key === 'Meta'
 
@@ -33,6 +27,7 @@ export const isLengthEven = (str = '') => str.length % 2 === 0
 export const snakeToCamel = name => name.replace(/_([a-z])/g, (p0, p1) => p1.toUpperCase())
 
 export const camelToSnake = name => name.replace(/([A-Z])/g, (_, p) => `-${p.toLowerCase()}`)
+
 /**
  *  Are two arrays have intersection
  */
@@ -307,26 +302,36 @@ export const getImageInfo = (src, baseUrl = window.DIRNAME) => {
   }
 }
 
-export const escapeHtml = html => {
-  return html
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
+export const escapeHTML = str =>
+  str.replace(
+    /[&<>'"]/g,
+    tag =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag)
+  )
 
-export const unescapeHtml = text => {
-  return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, '\'')
-}
+export const unescapeHTML = str =>
+  str.replace(
+    /(?:&amp;|&lt;|&gt;|&quot;|&#39;)/g,
+    tag =>
+      ({
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&#39;': "'",
+        '&quot;': '"'
+      }[tag] || tag)
+  )
 
 export const escapeInBlockHtml = html => {
   return html
     .replace(/(<(style|script|title)[^<>]*>)([\s\S]*?)(<\/\2>)/g, (m, p1, p2, p3, p4) => {
-      return `${escapeHtml(p1)}${p3}${escapeHtml(p4)}`
+      return `${escapeHTML(p1)}${p3}${escapeHTML(p4)}`
     })
 }
 
@@ -348,26 +353,6 @@ export const wordCount = markdown => {
   all += markdown.length
 
   return { word, paragraph, character, all }
-}
-
-/**
- * [genUpper2LowerKeyHash generate constants map hash, the value is lowercase of the key,
- * also translate `_` to `-`]
- */
-export const genUpper2LowerKeyHash = keys => {
-  return keys.reduce((acc, key) => {
-    const value = key.toLowerCase().replace(/_/g, '-')
-    return Object.assign(acc, { [key]: value })
-  }, {})
-}
-
-/**
- * generate constants map, the value is the key.
- */
-export const generateKeyHash = keys => {
-  return keys.reduce((acc, key) => {
-    return Object.assign(acc, { [key]: key })
-  }, {})
 }
 
 // mixins
@@ -411,4 +396,24 @@ export const collectFootnotes = (blocks) => {
   }
 
   return map
+}
+
+export const getDefer = () => {
+  const defer = {}
+  const promise = new Promise((resolve, reject) => {
+    defer.resolve = resolve
+    defer.reject = reject
+  })
+  defer.promise = promise
+
+  return defer
+}
+
+/**
+ * Deep clone the given object.
+ *
+ * @param {*} obj Object to clone
+ */
+export const deepClone = obj => {
+  return JSON.parse(JSON.stringify(obj))
 }

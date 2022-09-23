@@ -1,13 +1,13 @@
-import Vue from 'vue'
-import VueElectron from 'vue-electron'
-import sourceMapSupport from 'source-map-support'
-import bootstrapRenderer from './bootstrap'
-import VueRouter from 'vue-router'
-import lang from 'element-ui/lib/locale/lang/en'
-import locale from 'element-ui/lib/locale'
-import axios from './axios'
-import store from './store'
-import './assets/symbolIcon'
+import Vue from "vue";
+import VueElectron from "vue-electron";
+import sourceMapSupport from "source-map-support";
+import bootstrapRenderer from "./bootstrap";
+import VueRouter from "vue-router";
+import lang from "element-ui/lib/locale/lang/en";
+import locale from "element-ui/lib/locale";
+import axios from "./axios";
+import store from "./store";
+import "./assets/symbolIcon";
 import {
   Dialog,
   Form,
@@ -32,84 +32,82 @@ import {
   TableColumn,
   Tabs,
   TabPane,
-  Input
-} from 'element-ui'
-import services from './services'
-import routes from './router'
-import { addElementStyle } from '@/util/theme'
-import VueI18n from 'vue-i18n'
-import locales from './locales/index'
-import './assets/styles/index.css'
-import './assets/styles/printService.css'
+  Input,
+} from "element-ui";
+import services from "./services";
+import routes from "./router";
+import { addElementStyle } from "@/util/theme";
+import VueI18n from "vue-i18n";
+import locales from "./locales/index";
+import "./assets/styles/index.css";
+import "./assets/styles/printService.css";
 // -----------------------------------------------
 
 // Decode source map in production - must be registered first
 sourceMapSupport.install({
-  environment: 'node',
+  environment: "node",
   handleUncaughtExceptions: false,
-  hookRequire: false
-})
+  hookRequire: false,
+});
 
-global.marktext = {}
-bootstrapRenderer()
+global.marktext = {};
+bootstrapRenderer();
 
-addElementStyle()
+addElementStyle();
 
 // -----------------------------------------------
 // Be careful when changing code before this line!
 
 // Configure Vue
-locale.use(lang)
+locale.use(lang);
 
-Vue.use(Dialog)
-Vue.use(Form)
-Vue.use(FormItem)
-Vue.use(InputNumber)
-Vue.use(Button)
-Vue.use(Tooltip)
-Vue.use(Upload)
-Vue.use(Slider)
-Vue.use(Checkbox)
-Vue.use(ColorPicker)
-Vue.use(Col)
-Vue.use(Row)
-Vue.use(Tree)
-Vue.use(Autocomplete)
-Vue.use(Switch)
-Vue.use(Select)
-Vue.use(Option)
-Vue.use(Radio)
-Vue.use(RadioGroup)
-Vue.use(Table)
-Vue.use(TableColumn)
-Vue.use(Tabs)
-Vue.use(TabPane)
-Vue.use(Input)
+Vue.use(Dialog);
+Vue.use(Form);
+Vue.use(FormItem);
+Vue.use(InputNumber);
+Vue.use(Button);
+Vue.use(Tooltip);
+Vue.use(Upload);
+Vue.use(Slider);
+Vue.use(Checkbox);
+Vue.use(ColorPicker);
+Vue.use(Col);
+Vue.use(Row);
+Vue.use(Tree);
+Vue.use(Autocomplete);
+Vue.use(Switch);
+Vue.use(Select);
+Vue.use(Option);
+Vue.use(Radio);
+Vue.use(RadioGroup);
+Vue.use(Table);
+Vue.use(TableColumn);
+Vue.use(Tabs);
+Vue.use(TabPane);
+Vue.use(Input);
 
-Vue.use(VueRouter)
-Vue.use(VueI18n)
+Vue.use(VueRouter);
+Vue.use(VueI18n);
 
-Vue.use(VueElectron)
-Vue.http = Vue.prototype.$http = axios
-Vue.config.productionTip = false
+Vue.use(VueElectron);
+Vue.http = Vue.prototype.$http = axios;
+Vue.config.productionTip = false;
 
-services.forEach(s => {
-  Vue.prototype['$' + s.name] = s[s.name]
-})
+services.forEach((s) => {
+  Vue.prototype["$" + s.name] = s[s.name];
+});
 
 const router = new VueRouter({
-  routes: routes(global.marktext.env.type)
-})
-const i18n = new VueI18n(
-  {
-    locale: 'en-US',
-    messages: locales
-  }
-)
+  routes: routes(global.marktext.env.type),
+});
+const i18n = new VueI18n({
+  locale: "en-US",
+  messages: locales,
+});
 /* eslint-disable no-new */
 new Vue({
   store,
   router,
   i18n,
-  template: '<router-view class="view"></router-view>'
-}).$mount('#app')
+  template: '<router-view class="view"></router-view>',
+}).$mount("#app");

@@ -1,5 +1,5 @@
 import path from 'path'
-import fse from 'fs-extra'
+import fsPromises from 'fs/promises'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
 import log from 'electron-log'
@@ -9,9 +9,10 @@ import { isLinux, isOsx, isWindows } from '../config'
 import parseArgs from '../cli/parser'
 import { normalizeAndResolvePath } from '../filesystem'
 import { normalizeMarkdownPath } from '../filesystem/markdown'
+import { registerKeyboardListeners } from '../keyboard'
 import { selectTheme } from '../menu/actions/theme'
 import { dockMenu } from '../menu/templates'
-import ensureDefaultDict from '../preferences/hunspell'
+import registerSpellcheckerListeners from '../spellchecker'
 import { watchers } from '../utils/imagePathAutoComplement'
 import { WindowType } from '../windows/base'
 import EditorWindow from '../windows/editor'
@@ -111,13 +112,6 @@ class App {
         return { action: 'deny' }
       })
     })
-
-    // Copy default (en-US) Hunspell dictionary.
-    const { paths } = this._accessor
-    ensureDefaultDict(paths.userDataPath)
-      .catch(error => {
-        log.error('Error copying Hunspell dictionary: ', error)
-      })
   }
 
   async getScreenshotFileName () {
@@ -273,9 +267,9 @@ class App {
   /**
    * Create a new setting window.
    */
-  _createSettingWindow () {
+  _createSettingWindow (category) {
     const setting = new SettingWindow(this._accessor)
-    setting.createWindow()
+    setting.createWindow(category)
     this._windowManager.add(setting)
     if (this._windowManager.windowCount === 1) {
       this._accessor.menu.setActiveWindow(setting.id)
@@ -411,11 +405,12 @@ class App {
     pathsToOpen.length = 0
   }
 
-  _openSettingsWindow () {
+  _openSettingsWindow (category) {
     const settingWins = this._windowManager.getWindowsByType(WindowType.SETTINGS)
     if (settingWins.length >= 1) {
       // A setting window is already created
       const browserSettingWindow = settingWins[0].win.browserWindow
+      browserSettingWindow.webContents.send('settings::change-tab', category)
       if (isLinux) {
         browserSettingWindow.focus()
       } else {
@@ -423,10 +418,13 @@ class App {
       }
       return
     }
-    this._createSettingWindow()
+    this._createSettingWindow(category)
   }
 
   _listenForIpcMain () {
+    registerKeyboardListeners()
+    registerSpellcheckerListeners()
+
     ipcMain.on('app-create-editor-window', () => {
       this._createEditorWindow()
     })
@@ -444,7 +442,7 @@ class App {
             // Write screenshot image into screenshot folder.
             const image = clipboard.readImage()
             const bufferImage = image.toPNG()
-            await fse.writeFile(screenshotFileName, bufferImage)
+            await fsPromises.writeFile(screenshotFileName, bufferImage)
           } catch (err) {
             log.error(err)
           }
@@ -459,8 +457,8 @@ class App {
       }
     })
 
-    ipcMain.on('app-create-settings-window', () => {
-      this._openSettingsWindow()
+    ipcMain.on('app-create-settings-window', category => {
+      this._openSettingsWindow(category)
     })
 
     ipcMain.on('app-open-file-by-id', (windowId, filePath) => {
@@ -560,6 +558,23 @@ class App {
       const { keybindings } = this._accessor
       // Convert map to object
       win.webContents.send('mt::keybindings-response', Object.fromEntries(keybindings.keys))
+    })
+
+    ipcMain.on('mt::open-keybindings-config', () => {
+      const { keybindings } = this._accessor
+      keybindings.openConfigInFileManager()
+    })
+
+    ipcMain.handle('mt::keybinding-get-pref-keybindings', () => {
+      const { keybindings } = this._accessor
+      const defaultKeybindings = keybindings.getDefaultKeybindings()
+      const userKeybindings = keybindings.getUserKeybindings()
+      return { defaultKeybindings, userKeybindings }
+    })
+
+    ipcMain.handle('mt::keybinding-save-user-keybindings', async (event, userKeybindings) => {
+      const { keybindings } = this._accessor
+      return keybindings.setUserKeybindings(userKeybindings)
     })
   }
 }

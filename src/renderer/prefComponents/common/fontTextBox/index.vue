@@ -1,7 +1,7 @@
 <template>
-  <section class="pref-font-input-item" :class="{'ag-underdevelop': disable}">
+  <section class="pref-font-input-item" :class="{ 'ag-underdevelop': disable }">
     <div class="description">
-      <span>{{$t(description)}}</span>
+      <span>{{ $t(description) }}</span>
       <i class="el-icon-info" v-if="more" @click="handleMoreClick"></i>
     </div>
     <el-autocomplete
@@ -21,10 +21,9 @@
 </template>
 
 <script>
-import { shell } from 'electron'
-import fontManager from 'fontmanager-redux'
+import { shell } from "electron";
 
-// Example font objects:
+// Example of fontmanager-redux objects:
 // {
 //     path: '/Library/Fonts/Arial.ttf',
 //     postscriptName: 'ArialMT',
@@ -47,12 +46,12 @@ import fontManager from 'fontmanager-redux'
 // }
 
 export default {
-  data () {
-    this.defaultValue = this.value
+  data() {
+    this.defaultValue = this.value;
     return {
       fontFamilies: [],
-      selectValue: this.value
-    }
+      selectValue: this.value,
+    };
   },
   props: {
     description: String,
@@ -61,53 +60,61 @@ export default {
     more: String,
     disable: {
       type: Boolean,
-      default: false
+      default: false,
     },
     onlyMonospace: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
 
   watch: {
     value: function (value, oldValue) {
       if (value !== oldValue) {
-        this.defaultValue = value
-        this.selectValue = value
+        this.defaultValue = value;
+        this.selectValue = value;
       }
-    }
+    },
   },
 
   methods: {
-    querySearch (queryString, callback) {
-      const fontFamilies = this.fontFamilies
-      const results = queryString && this.defaultValue !== queryString
-        ? fontFamilies.filter(f => f.toLowerCase().indexOf(queryString.toLowerCase()) === 0)
-        : fontFamilies
-      callback(results)
+    querySearch(queryString, callback) {
+      const fontFamilies = this.fontFamilies;
+      const results =
+        queryString && this.defaultValue !== queryString
+          ? fontFamilies.filter(
+              (f) => f.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+            )
+          : fontFamilies;
+      callback(results);
     },
 
-    handleSelect (value) {
+    handleSelect(value) {
       if (/^[^\s]+((-|\s)*[^\s])*$/.test(value)) {
-        this.selectValue = value
-        this.onChange(value)
+        this.selectValue = value;
+        this.onChange(value);
       }
     },
 
-    handleMoreClick () {
-      if (typeof this.more === 'string') {
-        shell.openExternal(this.more)
+    handleMoreClick() {
+      if (typeof this.more === "string") {
+        shell.openExternal(this.more);
       }
-    }
+    },
   },
-  mounted () {
-    const { onlyMonospace } = this
-    const buf = fontManager.getAvailableFontsSync()
-      .filter(f => f.family && (!onlyMonospace || (onlyMonospace && f.monospace)))
-      .map(f => f.family)
-    this.fontFamilies = [...new Set(buf)].sort((a, b) => a.localeCompare(b))
-  }
-}
+  mounted() {
+    // Delay load native library because it's not needed for the editor and causes a delay.
+    const fontManager = require("fontmanager-redux");
+    const { onlyMonospace } = this;
+    const buf = fontManager
+      .getAvailableFontsSync()
+      .filter(
+        (f) => f.family && (!onlyMonospace || (onlyMonospace && f.monospace))
+      )
+      .map((f) => f.family);
+    this.fontFamilies = [...new Set(buf)].sort((a, b) => a.localeCompare(b));
+  },
+};
 </script>
 
 <style>
@@ -115,16 +122,16 @@ export default {
   border: 1px solid var(--floatBorderColor);
   background-color: var(--floatBgColor);
 }
-.el-popper[x-placement^=top] .popper__arrow {
+.el-popper[x-placement^="top"] .popper__arrow {
   border-top-color: var(--floatBorderColor);
 }
-.el-popper[x-placement^=bottom] .popper__arrow {
+.el-popper[x-placement^="bottom"] .popper__arrow {
   border-bottom-color: var(--floatBorderColor);
 }
-.el-popper[x-placement^=top] .popper__arrow::after {
+.el-popper[x-placement^="top"] .popper__arrow::after {
   border-top-color: var(--floatBgColor);
 }
-.el-popper[x-placement^=bottom] .popper__arrow::after {
+.el-popper[x-placement^="bottom"] .popper__arrow::after {
   border-bottom-color: var(--floatBgColor);
 }
 
@@ -141,7 +148,7 @@ export default {
   font-size: 14px;
   color: var(--editorColor);
   & .font-autocomplete {
-    width: 240px;
+    width: 100%;
   }
   & input.el-input__inner {
     height: 30px;

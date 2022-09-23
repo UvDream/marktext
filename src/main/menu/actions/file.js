@@ -1,9 +1,12 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
 import log from 'electron-log'
 import { isDirectory, isFile, exists } from 'common/filesystem'
 import { MARKDOWN_EXTENSIONS, isMarkdownFile } from 'common/filesystem/paths'
+import { checkUpdates, userSetting } from './marktext'
+import { showTabBar } from './view'
+import { COMMANDS } from '../../commands'
 import { EXTENSION_HASN, PANDOC_EXTENSIONS, URL_REG } from '../../config'
 import { normalizeAndResolvePath, writeFile } from '../../filesystem'
 import { writeMarkdownFile } from '../../filesystem/markdown'
@@ -53,9 +56,9 @@ const handleResponseForExport = async (e, { type, content, pathname, title, page
   const win = BrowserWindow.fromWebContents(e.sender)
   const extension = EXTENSION_HASN[type]
   const dirname = pathname ? path.dirname(pathname) : getPath('documents')
-  let nakedFilename = title
+  let nakedFilename = pathname ? path.basename(pathname, '.md') : title
   if (!nakedFilename) {
-    nakedFilename = pathname ? path.basename(pathname, '.md') : 'Untitled'
+    nakedFilename = 'Untitled'
   }
 
   const defaultPath = path.join(dirname, `${nakedFilename}${extension}`)
@@ -71,7 +74,7 @@ const handleResponseForExport = async (e, { type, content, pathname, title, page
         Object.assign(options, getPdfPageOptions(pageOptions))
         const data = await win.webContents.printToPDF(options)
         removePrintServiceFromWindow(win)
-        await writeFile(filePath, data, extension, {})
+        await writeFile(filePath, data, extension, 'binary')
       } else {
         if (!content) {
           throw new Error('No HTML content found.')
@@ -112,7 +115,7 @@ const handleResponseForSave = async (e, { id, filename, markdown, pathname, opti
 
   // If the file doesn't exist on disk add it to the recently used documents later
   // and execute file from filesystem watcher for a short time. The file may exists
-  // on disk nevertheless but is already tracked by Mark Text.
+  // on disk nevertheless but is already tracked by MarkText.
   const alreadyExistOnDisk = !!pathname
 
   let filePath = pathname
@@ -133,6 +136,8 @@ const handleResponseForSave = async (e, { id, filename, markdown, pathname, opti
   }
 
   filePath = path.resolve(filePath)
+  const extension = path.extname(filePath) || '.md'
+  filePath = !filePath.endsWith(extension) ? filePath += extension : filePath
   return writeMarkdownFile(filePath, markdown, options, win)
     .then(() => {
       if (!alreadyExistOnDisk) {
@@ -221,14 +226,14 @@ ipcMain.on('mt::save-and-close-tabs', async (e, unsavedFiles) => {
     Promise.all(unsavedFiles.map(file => handleResponseForSave(e, file)))
       .then(arr => {
         const tabIds = arr.filter(id => id != null)
-        win.send('mt::force-close-tabs-by-id', tabIds)
+        win.webContents.send('mt::force-close-tabs-by-id', tabIds)
       })
       .catch(err => {
-        log.error('Error while save all:', err.error)
+        log.error('Error while save all:', err)
       })
   } else {
     const tabIds = unsavedFiles.map(f => f.id)
-    win.send('mt::force-close-tabs-by-id', tabIds)
+    win.webContents.send('mt::force-close-tabs-by-id', tabIds)
   }
 })
 
@@ -241,7 +246,7 @@ ipcMain.on('mt::response-file-save-as', async (e, { id, filename, markdown, path
 
   // If the file doesn't exist on disk add it to the recently used documents later
   // and execute file from filesystem watcher for a short time. The file may exists
-  // on disk nevertheless but is already tracked by Mark Text.
+  // on disk nevertheless but is already tracked by MarkText.
   const alreadyExistOnDisk = !!pathname
 
   let { filePath, canceled } = await dialog.showSaveDialog(win, {
@@ -357,7 +362,7 @@ ipcMain.on('mt::rename', async (e, { id, pathname, newPathname }) => {
     })
   }
 
-  if (!exists(newPathname)) {
+  if (!await exists(newPathname)) {
     doRename()
   } else {
     const { response } = await dialog.showMessageBox(win, {
@@ -413,20 +418,35 @@ ipcMain.on('mt::format-link-click', (e, { data, dirname }) => {
     return
   }
 
-  const href = data.href || data.text
-  if (URL_REG.test(href)) {
-    return shell.openExternal(href)
+  const urlCandidate = data.href || data.text
+  if (URL_REG.test(urlCandidate)) {
+    shell.openExternal(urlCandidate)
+    return
+  } else if (/^[a-z0-9]+:\/\//i.test(urlCandidate)) {
+    // Prevent other URLs.
+    return
+  }
+
+  const href = data.href
+  if (!href) {
+    return
   }
 
   let pathname = null
-  if (path.isAbsolute(href) && isMarkdownFile(href)) {
+  if (path.isAbsolute(href)) {
     pathname = href
-  } else if (!path.isAbsolute(href) && isMarkdownFile(path.join(dirname, href))) {
+  } else if (dirname && !path.isAbsolute(href)) {
     pathname = path.join(dirname, href)
   }
+
   if (pathname) {
-    const win = BrowserWindow.fromWebContents(e.sender)
-    return openFileOrFolder(win, pathname)
+    pathname = path.normalize(pathname)
+    if (isMarkdownFile(pathname)) {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      openFileOrFolder(win, pathname)
+    } else {
+      shell.openPath(pathname)
+    }
   }
 })
 
@@ -484,7 +504,7 @@ export const importFile = async win => {
   }
 }
 
-export const print = win => {
+export const printDocument = win => {
   if (win) {
     win.webContents.send('mt::show-export-dialog', 'print')
   }
@@ -528,6 +548,7 @@ export const openFileOrFolder = (win, pathname) => {
 export const newBlankTab = win => {
   if (win && win.webContents) {
     win.webContents.send('mt::new-untitled-tab')
+    showTabBar(win)
   }
 }
 
@@ -538,6 +559,12 @@ export const newEditorWindow = () => {
 export const closeTab = win => {
   if (win && win.webContents) {
     win.webContents.send('mt::editor-close-tab')
+  }
+}
+
+export const closeWindow = win => {
+  if (win) {
+    win.close()
   }
 }
 
@@ -572,4 +599,25 @@ export const rename = win => {
 
 export const clearRecentlyUsed = () => {
   ipcMain.emit('menu-clear-recently-used')
+}
+
+// --- Commands -------------------------------------------------------------
+
+export const loadFileCommands = commandManager => {
+  commandManager.add(COMMANDS.FILE_CHECK_UPDATE, checkUpdates)
+  commandManager.add(COMMANDS.FILE_CLOSE_TAB, closeTab)
+  commandManager.add(COMMANDS.FILE_CLOSE_WINDOW, closeWindow)
+  commandManager.add(COMMANDS.FILE_EXPORT_FILE, exportFile)
+  commandManager.add(COMMANDS.FILE_IMPORT_FILE, importFile)
+  commandManager.add(COMMANDS.FILE_MOVE_FILE, moveTo)
+  commandManager.add(COMMANDS.FILE_NEW_FILE, newEditorWindow)
+  commandManager.add(COMMANDS.FILE_NEW_TAB, newBlankTab)
+  commandManager.add(COMMANDS.FILE_OPEN_FILE, openFile)
+  commandManager.add(COMMANDS.FILE_OPEN_FOLDER, openFolder)
+  commandManager.add(COMMANDS.FILE_PREFERENCES, userSetting)
+  commandManager.add(COMMANDS.FILE_PRINT, printDocument)
+  commandManager.add(COMMANDS.FILE_QUIT, app.quit)
+  commandManager.add(COMMANDS.FILE_RENAME_FILE, rename)
+  commandManager.add(COMMANDS.FILE_SAVE, save)
+  commandManager.add(COMMANDS.FILE_SAVE_AS, saveAs)
 }

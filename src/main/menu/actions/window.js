@@ -1,4 +1,17 @@
-import { ipcMain } from 'electron'
+import { ipcMain, Menu } from 'electron'
+import { isOsx } from '../../config'
+import { COMMANDS } from '../../commands'
+import { zoomIn, zoomOut } from '../../windows/utils'
+
+export const minimizeWindow = win => {
+  if (win) {
+    if (isOsx) {
+      Menu.sendActionToFirstResponder('performMiniaturize:')
+    } else {
+      win.minimize()
+    }
+  }
+}
 
 export const toggleAlwaysOnTop = win => {
   if (win) {
@@ -6,16 +19,18 @@ export const toggleAlwaysOnTop = win => {
   }
 }
 
-export const zoomIn = win => {
-  const { webContents } = win
-  const zoom = webContents.getZoomFactor()
-  // WORKAROUND: We need to set zoom on the browser window due to Electron#16018.
-  webContents.send('mt::window-zoom', Math.min(2.0, zoom + 0.125))
+export const toggleFullScreen = win => {
+  if (win) {
+    win.setFullScreen(!win.isFullScreen())
+  }
 }
 
-export const zoomOut = win => {
-  const { webContents } = win
-  const zoom = webContents.getZoomFactor()
-  // WORKAROUND: We need to set zoom on the browser window due to Electron#16018.
-  webContents.send('mt::window-zoom', Math.max(0.5, zoom - 0.125))
+// --- Commands -------------------------------------------------------------
+
+export const loadWindowCommands = commandManager => {
+  commandManager.add(COMMANDS.WINDOW_MINIMIZE, minimizeWindow)
+  commandManager.add(COMMANDS.WINDOW_TOGGLE_ALWAYS_ON_TOP, toggleAlwaysOnTop)
+  commandManager.add(COMMANDS.WINDOW_TOGGLE_FULL_SCREEN, toggleFullScreen)
+  commandManager.add(COMMANDS.WINDOW_ZOOM_IN, zoomIn)
+  commandManager.add(COMMANDS.WINDOW_ZOOM_OUT, zoomOut)
 }

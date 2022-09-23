@@ -1,10 +1,11 @@
-import { generateKeyHash, genUpper2LowerKeyHash, getLongUniqueId } from '../utils'
 import htmlTags from 'html-tags'
 import voidHtmlTags from 'html-tags/void'
+import { generateKeyHash, genUpper2LowerKeyHash } from '../utils/hash'
+import { getLongUniqueId } from '../utils/random'
 
 // [0.25, 0.5, 1, 2, 4, 8] <—?—> [256M, 500M/768M, 1G/1000M, 2G, 4G, 8G]
 // Electron 2.0.2 not support yet! So give a default value 4
-export const DEVICE_MEMORY = navigator.deviceMemory || 4 // Get the divice memory number(Chrome >= 63)
+export const DEVICE_MEMORY = navigator.deviceMemory || 4 // Get the device memory number(Chrome >= 63)
 export const UNDO_DEPTH = DEVICE_MEMORY >= 4 ? 100 : 50
 export const HAS_TEXT_BLOCK_REG = /^span$/i
 export const VOID_HTML_TAGS = Object.freeze(voidHtmlTags)
@@ -145,6 +146,7 @@ export const CLASS_OR_ID = Object.freeze(genUpper2LowerKeyHash([
   'AG_RUBY_TEXT',
   'AG_SELECTION',
   'AG_SEQUENCE',
+  'AG_PLANTUML',
   'AG_SHOW_PREVIEW',
   'AG_SOFT_LINE_BREAK',
   'AG_TASK_LIST',
@@ -272,7 +274,7 @@ export const MUYA_DEFAULT_OPTION = Object.freeze({
   autoCheck: false,
   // Whether we should set spellcheck attribute on our container to highlight misspelled words.
   // NOTE: The browser is not able to correct misspelled words words without a custom
-  // implementation like in Mark Text.
+  // implementation like in MarkText.
   spellcheckEnabled: false,
   // transform the image to local folder, cloud or just return the local path
   imageAction: null,
@@ -292,7 +294,7 @@ export const MUYA_DEFAULT_OPTION = Object.freeze({
 })
 
 // export const DIAGRAM_TEMPLATE = Object.freeze({
-//   'mermaid': `graph LR;\nYou-->|Mark Text|Me;`
+//   'mermaid': `graph LR;\nYou-->|MarkText|Me;`
 // })
 
 export const isOsx = window && window.navigator && /Mac/.test(window.navigator.platform)

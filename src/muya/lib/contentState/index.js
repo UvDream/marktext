@@ -11,6 +11,7 @@ import tableBlockCtrl from './tableBlockCtrl'
 import tableDragBarCtrl from './tableDragBarCtrl'
 import tableSelectCellsCtrl from './tableSelectCellsCtrl'
 import coreApi from './core'
+import marktextApi from './marktext'
 import History from './history'
 import arrowCtrl from './arrowCtrl'
 import pasteCtrl from './pasteCtrl'
@@ -35,6 +36,7 @@ import escapeCharactersMap, { escapeCharacters } from '../parser/escapeCharacter
 
 const prototypes = [
   coreApi,
+  marktextApi,
   tabCtrl,
   enterCtrl,
   updateCtrl,
@@ -246,13 +248,26 @@ class ContentState {
     matches.forEach((m, i) => {
       m.active = i === index
     })
-    const startIndex = startKey ? blocks.findIndex(block => block.key === startKey) : 0
-    const endIndex = endKey ? blocks.findIndex(block => block.key === endKey) + 1 : blocks.length
-    const needRenderBlocks = blocks.slice(startIndex, endIndex)
+
+    // The `endKey` may already be removed from blocks if range was selected via keyboard (GH#1854).
+    let startIndex = startKey ? blocks.findIndex(block => block.key === startKey) : 0
+    if (startIndex === -1) {
+      startIndex = 0
+    }
+
+    let endIndex = blocks.length
+    if (endKey) {
+      const tmpEndIndex = blocks.findIndex(block => block.key === endKey)
+      if (tmpEndIndex >= 0) {
+        endIndex = tmpEndIndex + 1
+      }
+    }
+
+    const blocksToRender = blocks.slice(startIndex, endIndex)
 
     this.setNextRenderRange()
     this.stateRender.collectLabels(blocks)
-    this.stateRender.partialRender(needRenderBlocks, activeBlocks, matches, startKey, endKey)
+    this.stateRender.partialRender(blocksToRender, activeBlocks, matches, startKey, endKey)
     if (isRenderCursor) {
       this.setCursor()
     } else {
@@ -279,7 +294,7 @@ class ContentState {
   }
 
   /**
-   * A block in Mark Text present a paragraph(block syntax in GFM) or a line in paragraph.
+   * A block in MarkText present a paragraph(block syntax in GFM) or a line in paragraph.
    * a `span` block must in a `p block` or `pre block` and `p block`'s children must be `span` blocks.
    */
   createBlock (type = 'span', extras = {}) {

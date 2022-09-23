@@ -1,12 +1,15 @@
 import path from 'path'
 import { BrowserWindow, dialog, ipcMain } from 'electron'
+import { enable as remoteEnable } from '@electron/remote/main'
 import log from 'electron-log'
 import windowStateKeeper from 'electron-window-state'
 import { isChildOfDirectory, isSamePathSync } from 'common/filesystem/paths'
 import BaseWindow, { WindowLifecycle, WindowType } from './base'
-import { ensureWindowPosition } from './utils'
+import { ensureWindowPosition, zoomIn, zoomOut } from './utils'
 import { TITLE_BAR_HEIGHT, editorWinOptions, isLinux, isOsx } from '../config'
+import { showEditorContextMenu } from '../contextMenu/editor'
 import { loadMarkdownFile } from '../filesystem/markdown'
+import { switchLanguage } from '../spellchecker'
 
 class EditorWindow extends BaseWindow {
   /**
@@ -50,14 +53,17 @@ class EditorWindow extends BaseWindow {
       winOptions.icon = path.join(__static, 'logo-96px.png')
     }
 
-    // Enable native or custom/frameless window and titlebar
     const {
       titleBarStyle,
       theme,
       sideBarVisibility,
       tabBarVisibility,
-      sourceCodeModeEnabled
+      sourceCodeModeEnabled,
+      spellcheckerEnabled,
+      spellcheckerLanguage
     } = preferences.getAll()
+
+    // Enable native or custom/frameless window and titlebar
     if (!isOsx) {
       winOptions.titleBarStyle = 'default'
       if (titleBarStyle === 'native') {
@@ -66,12 +72,28 @@ class EditorWindow extends BaseWindow {
     }
 
     winOptions.backgroundColor = this._getPreferredBackgroundColor(theme)
+    if (env.disableSpellcheck) {
+      winOptions.webPreferences.spellcheck = false
+    }
 
     let win = this.browserWindow = new BrowserWindow(winOptions)
+    remoteEnable(win.webContents)
     this.id = win.id
+
+    if (spellcheckerEnabled && !isOsx) {
+      try {
+        switchLanguage(win, spellcheckerLanguage)
+      } catch (error) {
+        log.error('Unable to set spell checker language on startup:', error)
+      }
+    }
 
     // Create a menu for the current window
     appMenu.addEditorMenu(win, { sourceCodeModeEnabled })
+
+    win.webContents.on('context-menu', (event, params) => {
+      showEditorContextMenu(win, event, params, preferences.getItem('spellcheckerEnabled'))
+    })
 
     win.webContents.once('did-finish-load', () => {
       this.lifecycle = WindowLifecycle.READY
@@ -80,7 +102,7 @@ class EditorWindow extends BaseWindow {
       // Restore and focus window
       this.bringToFront()
 
-      const lineEnding = preferences.getPreferedEol()
+      const lineEnding = preferences.getPreferredEol()
       appMenu.updateLineEndingMenu(this.id, lineEnding)
 
       win.webContents.send('mt::bootstrap-editor', {
@@ -94,6 +116,15 @@ class EditorWindow extends BaseWindow {
 
       this._doOpenFilesToOpen()
       this._markdownToOpen.length = 0
+
+      // Listen on default system mouse zoom event (e.g. Ctrl+MouseWheel on Linux/Windows).
+      win.webContents.on('zoom-changed', (event, zoomDirection) => {
+        if (zoomDirection === 'in') {
+          zoomIn(win)
+        } else if (zoomDirection === 'out') {
+          zoomOut(win)
+        }
+      })
     })
 
     win.webContents.once('did-fail-load', (event, errorCode, errorDescription) => {
@@ -115,7 +146,7 @@ class EditorWindow extends BaseWindow {
       const { response } = await dialog.showMessageBox(win, {
         type: 'warning',
         buttons: ['Close', 'Reload', 'Keep It Open'],
-        message: 'Mark Text has crashed',
+        message: 'MarkText has crashed',
         detail: msg
       })
 
@@ -171,6 +202,9 @@ class EditorWindow extends BaseWindow {
 
     mainWindowState.manage(win)
 
+    // Disable application menu shortcuts because we want to handle key bindings ourself.
+    win.webContents.setIgnoreMenuShortcuts(true)
+
     // Delay load files and directories after the current control flow.
     setTimeout(() => {
       if (rootDirectory) {
@@ -192,7 +226,8 @@ class EditorWindow extends BaseWindow {
    * @param {boolean} [selected] Whether the tab should become the selected tab (true if not set).
    */
   openTab (filePath, options = {}, selected = true) {
-    if (this.lifecycle === WindowLifecycle.QUITTING) return
+    // TODO: Don't allow new files if quitting.
+    if (this.lifecycle === WindowLifecycle.QUITTED) return
     this.openTabs([{ filePath, options, selected }])
   }
 
@@ -215,11 +250,12 @@ class EditorWindow extends BaseWindow {
    * @param {{filePath: string, selected: boolean, options: any}[]} filePath A list of markdown file paths and options to open.
    */
   openTabs (fileList) {
-    if (this.lifecycle === WindowLifecycle.QUITTING) return
+    // TODO: Don't allow new files if quitting.
+    if (this.lifecycle === WindowLifecycle.QUITTED) return
 
     const { browserWindow } = this
     const { preferences } = this._accessor
-    const eol = preferences.getPreferedEol()
+    const eol = preferences.getPreferredEol()
     const { autoGuessEncoding, trimTrailingNewline } = preferences.getAll()
 
     for (const { filePath, options, selected } of fileList) {
@@ -248,6 +284,7 @@ class EditorWindow extends BaseWindow {
    * @param {[string]} markdown The markdown string.
    */
   openUntitledTab (selected = true, markdown = '') {
+    // TODO: Don't allow new files if quitting.
     if (this.lifecycle === WindowLifecycle.QUITTED) return
 
     if (this.lifecycle === WindowLifecycle.READY) {
@@ -264,6 +301,7 @@ class EditorWindow extends BaseWindow {
    * @param {string} pathname The directory path.
    */
   openFolder (pathname) {
+    // TODO: Don't allow new files if quitting.
     if (!pathname || this.lifecycle === WindowLifecycle.QUITTED ||
       isSamePathSync(pathname, this._openedRootDirectory)) {
       return
@@ -375,7 +413,7 @@ class EditorWindow extends BaseWindow {
       this.lifecycle = WindowLifecycle.READY
       const { preferences } = this._accessor
       const { sideBarVisibility, tabBarVisibility, sourceCodeModeEnabled } = preferences.getAll()
-      const lineEnding = preferences.getPreferedEol()
+      const lineEnding = preferences.getPreferredEol()
       browserWindow.webContents.send('mt::bootstrap-editor', {
         addBlankTab: true,
         markdownList: [],
@@ -407,16 +445,6 @@ class EditorWindow extends BaseWindow {
   }
 
   // --- private ---------------------------------
-
-  _buildUrlString (windowId, env, userPreference) {
-    const url = this._buildUrlWithSettings(windowId, env, userPreference)
-    const spellcheckerIsHunspell = userPreference.getItem('spellcheckerIsHunspell')
-
-    // Add additional settings
-    url.searchParams.set('slp', spellcheckerIsHunspell ? '1' : '0')
-
-    return url.toString()
-  }
 
   /**
    * Open a new new tab from the markdown document.

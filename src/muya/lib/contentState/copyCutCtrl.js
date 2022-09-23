@@ -1,6 +1,6 @@
 import selection from '../selection'
 import { CLASS_OR_ID } from '../config'
-import { escapeHtml } from '../utils'
+import { escapeHTML } from '../utils'
 import { getSanitizeHtml } from '../utils/exportHtml'
 import ExportMarkdown from '../utils/exportMarkdown'
 import marked from '../parser/marked'
@@ -25,6 +25,7 @@ const copyCutCtrl = ContentState => {
         key,
         token
       })
+      this.selectedImage = null
       return
     }
     const { start, end } = selection.getCursorRange()
@@ -45,7 +46,7 @@ const copyCutCtrl = ContentState => {
     this.partialRender()
   }
 
-  ContentState.prototype.getClipBoradData = function () {
+  ContentState.prototype.getClipBoardData = function () {
     const { start, end } = selection.getCursorRange()
     if (!start || !end) {
       return { html: '', text: '' }
@@ -159,7 +160,7 @@ const copyCutCtrl = ContentState => {
       const block = this.getBlock(id)
       const language = block.lang || ''
       const codeContent = cf.querySelector('.ag-code-content')
-      const value = escapeHtml(codeContent.textContent)
+      const value = escapeHTML(codeContent.textContent)
       cf.innerHTML = `<code class="language-${language}">${value}</code>`
     }
 
@@ -203,6 +204,7 @@ const copyCutCtrl = ContentState => {
         case 'mermaid':
         case 'flowchart':
         case 'sequence':
+        case 'plantuml':
         case 'vega-lite':
           pre = document.createElement('pre')
           pre.innerHTML = `<code class="language-${functionType}">${value}</code>`
@@ -241,8 +243,10 @@ const copyCutCtrl = ContentState => {
 
       if (row === 1 && column === 1) {
         // Copy cells text if only one is selected
-        event.clipboardData.setData('text/html', '')
-        event.clipboardData.setData('text/plain', tableContents[0][0].text)
+        if (tableContents[0][0].text.length > 0) {
+          event.clipboardData.setData('text/html', '')
+          event.clipboardData.setData('text/plain', tableContents[0][0].text)
+        }
       } else {
         // Copy as markdown table
         const figureBlock = this.createBlock('figure', {
@@ -252,9 +256,10 @@ const copyCutCtrl = ContentState => {
         this.appendChild(figureBlock, table)
         const { isGitlabCompatibilityEnabled, listIndentation } = this
         const markdown = new ExportMarkdown([figureBlock], listIndentation, isGitlabCompatibilityEnabled).generate()
-
-        event.clipboardData.setData('text/html', '')
-        event.clipboardData.setData('text/plain', markdown)
+        if (markdown.length > 0) {
+          event.clipboardData.setData('text/html', '')
+          event.clipboardData.setData('text/plain', markdown)
+        }
       }
     }
   }
@@ -268,30 +273,38 @@ const copyCutCtrl = ContentState => {
     const { selectedImage } = this
     if (selectedImage) {
       const { token } = selectedImage
-      event.clipboardData.setData('text/html', token.raw)
-      event.clipboardData.setData('text/plain', token.raw)
+      if (token.raw.length > 0) {
+        event.clipboardData.setData('text/html', token.raw)
+        event.clipboardData.setData('text/plain', token.raw)
+      }
       return
     }
 
-    const { html, text } = this.getClipBoradData()
+    const { html, text } = this.getClipBoardData()
     switch (type) {
       case 'normal': {
-        event.clipboardData.setData('text/html', html)
-        event.clipboardData.setData('text/plain', text)
+        if (text.length > 0) {
+          event.clipboardData.setData('text/html', html)
+          event.clipboardData.setData('text/plain', text)
+        }
         break
       }
       case 'copyAsMarkdown': {
-        event.clipboardData.setData('text/html', '')
-        event.clipboardData.setData('text/plain', text)
+        if (text.length > 0) {
+          event.clipboardData.setData('text/html', '')
+          event.clipboardData.setData('text/plain', text)
+        }
         break
       }
       case 'copyAsHtml': {
-        event.clipboardData.setData('text/html', '')
-        event.clipboardData.setData('text/plain', getSanitizeHtml(text, {
-          superSubScript: this.muya.options.superSubScript,
-          footnote: this.muya.options.footnote,
-          isGitlabCompatibilityEnabled: this.muya.options.isGitlabCompatibilityEnabled
-        }))
+        if (text.length > 0) {
+          event.clipboardData.setData('text/html', '')
+          event.clipboardData.setData('text/plain', getSanitizeHtml(text, {
+            superSubScript: this.muya.options.superSubScript,
+            footnote: this.muya.options.footnote,
+            isGitlabCompatibilityEnabled: this.muya.options.isGitlabCompatibilityEnabled
+          }))
+        }
         break
       }
 
@@ -301,8 +314,10 @@ const copyCutCtrl = ContentState => {
         const anchor = this.getAnchor(block)
         const { isGitlabCompatibilityEnabled, listIndentation } = this
         const markdown = new ExportMarkdown([anchor], listIndentation, isGitlabCompatibilityEnabled).generate()
-        event.clipboardData.setData('text/html', '')
-        event.clipboardData.setData('text/plain', markdown)
+        if (markdown.length > 0) {
+          event.clipboardData.setData('text/html', '')
+          event.clipboardData.setData('text/plain', markdown)
+        }
         break
       }
 
@@ -311,8 +326,10 @@ const copyCutCtrl = ContentState => {
         if (typeof codeContent !== 'string') {
           return
         }
-        event.clipboardData.setData('text/html', '')
-        event.clipboardData.setData('text/plain', codeContent)
+        if (codeContent.length > 0) {
+          event.clipboardData.setData('text/html', '')
+          event.clipboardData.setData('text/plain', codeContent)
+        }
       }
     }
   }

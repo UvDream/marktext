@@ -4,9 +4,9 @@
   "titleBarStyle": "custom",
   "openFilesInNewWindow": false,
   "openFolderInNewWindow": false,
+  "zoom": 1.0,
   "hideScrollbar": false,
   "wordWrapInToc": false,
-  "aidou": true,
   "fileSortBy": "created",
   "startUpAction": "lastState",
   "defaultDirectoryToOpen": "",
@@ -53,9 +53,7 @@
   "autoSwitchTheme": 2,
 
   "spellcheckerEnabled": false,
-  "spellcheckerIsHunspell": false,
   "spellcheckerNoUnderline": false,
-  "spellcheckerAutoDetectLanguage": false,
   "spellcheckerLanguage": "en-US",
 
   "sideBarVisibility": false,

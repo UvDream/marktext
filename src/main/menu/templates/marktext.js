@@ -2,18 +2,20 @@ import { app } from 'electron'
 import { showAboutDialog } from '../actions/help'
 import * as actions from '../actions/marktext'
 
+// macOS only menu.
+
 export default function (keybindings) {
   return {
-    label: 'Mark Text',
+    label: 'MarkText',
     submenu: [{
-      label: 'About Mark Text',
-      click (menuItem, browserWindow) {
-        showAboutDialog(browserWindow)
+      label: 'About MarkText',
+      click (menuItem, focusedWindow) {
+        showAboutDialog(focusedWindow)
       }
     }, {
       label: 'Check for updates...',
-      click (menuItem, browserWindow) {
-        actions.checkUpdates(browserWindow)
+      click (menuItem, focusedWindow) {
+        actions.checkUpdates(focusedWindow)
       }
     }, {
       label: 'Preferences',
@@ -30,20 +32,26 @@ export default function (keybindings) {
     }, {
       type: 'separator'
     }, {
-      label: 'Hide Mark Text',
+      label: 'Hide MarkText',
       accelerator: keybindings.getAccelerator('mt.hide'),
-      role: 'hide'
+      click () {
+        actions.osxHide()
+      }
     }, {
       label: 'Hide Others',
       accelerator: keybindings.getAccelerator('mt.hide-others'),
-      role: 'hideothers'
+      click () {
+        actions.osxHideAll()
+      }
     }, {
       label: 'Show All',
-      role: 'unhide'
+      click () {
+        actions.osxShowAll()
+      }
     }, {
       type: 'separator'
     }, {
-      label: 'Quit Mark Text',
+      label: 'Quit MarkText',
       accelerator: keybindings.getAccelerator('file.quit'),
       click: app.quit
     }]
